@@ -16,6 +16,6 @@ const cli = fileURLToPath(new URL("../node_modules/void/dist/cli/cli.mjs", impor
 const result = spawnSync(process.execPath, [cli, "deploy", "--platform", "cloudflare"], {
   cwd: fileURLToPath(new URL("../apps/cloud/", import.meta.url)),
   stdio: "inherit",
-  env: process.env,
+  env: { ...process.env, MOUSE_STATS_ORIGIN: origin.origin },
 });
 process.exit(result.status ?? 1);
