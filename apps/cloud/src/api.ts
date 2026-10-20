@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import {
@@ -158,6 +158,38 @@ async function issue(db: D1Database, user_id: string, device_id: string | null, 
     admin ? now() + 300 : 0,
   );
   return { access_token, refresh_token, expires_in: 300 };
+}
+async function issueBrowserSession(
+  c: Context<{ Bindings: Env; Variables: { session: Session } }>,
+  db: D1Database,
+  user_id: string,
+) {
+  const shortSession = await issue(db, user_id, null, true);
+  const cookieToken = token();
+  const lifetime = 30 * 86400;
+  await run(
+    db,
+    "INSERT INTO device_sessions(id,user_id,device_id,refresh_hash,access_hash,access_expires,expires_at,stepup_until) VALUES(?,?,NULL,NULL,?,?,?,0)",
+    crypto.randomUUID(),
+    user_id,
+    await hash(cookieToken),
+    now() + lifetime,
+    now() + lifetime,
+  );
+  const secure = c.env.ORIGIN.startsWith("https://") ? "; Secure" : "";
+  c.header(
+    "Set-Cookie",
+    `mouse_stats_session=${cookieToken}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${lifetime}${secure}`,
+  );
+  return shortSession;
+}
+function browserCookie(request: Request) {
+  return request.headers
+    .get("cookie")
+    ?.split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith("mouse_stats_session="))
+    ?.slice("mouse_stats_session=".length);
 }
 export function createApi() {
   const app = new Hono<{ Bindings: Env; Variables: { session: Session } }>();
@@ -325,7 +357,7 @@ export function createApi() {
         return fail(401, "AUTHENTICATION_FAILED");
       }
       if (ctx.mode === "manage")
-        return c.json({ ...(await issue(c.env.DB, user_id!, null, true)), state: ctx.state });
+        return c.json({ ...(await issueBrowserSession(c, c.env.DB, user_id!)), state: ctx.state });
       const code = token();
       await run(
         c.env.DB,
@@ -477,7 +509,7 @@ export function createApi() {
       now(),
     );
     if (!device) fail(401, "DEVICE_REVOKED");
-    return c.json(await issue(c.env.DB, code!.user_id, device!.device_id, true));
+    return c.json(await issueBrowserSession(c, c.env.DB, code!.user_id));
   });
   // Recovery codes are independent 256-bit, single-use proofs. No email fallback.
   app.post("/api/v1/auth/recover", async (c) => {
@@ -492,15 +524,20 @@ export function createApi() {
       owner!.id,
     );
     if (!proof) fail(401, "RECOVERY_FAILED");
-    return c.json(await issue(c.env.DB, proof!.user_id, null, true));
+    return c.json(await issueBrowserSession(c, c.env.DB, proof!.user_id));
   });
   app.use("/api/v1/*", async (c, next) => {
-    const auth = c.req.header("authorization");
-    if (!auth?.startsWith("Bearer ")) fail(401, "AUTHENTICATION_REQUIRED");
+    const authorization = c.req.header("authorization");
+    const credential = authorization
+      ? authorization.startsWith("Bearer ")
+        ? authorization.slice(7)
+        : ""
+      : browserCookie(c.req.raw);
+    if (!credential) fail(401, "AUTHENTICATION_REQUIRED");
     const s = await get<Session>(
       c.env.DB,
       `SELECT s.id,s.user_id,s.device_id,s.stepup_until,u.data_generation FROM device_sessions s JOIN users u ON u.id=s.user_id LEFT JOIN devices d ON d.id=s.device_id WHERE s.access_hash=? AND s.access_expires>? AND s.expires_at>? AND s.revoked_at IS NULL AND (s.device_id IS NULL OR d.revoked_at IS NULL)`,
-      await hash(auth!.slice(7)),
+      await hash(credential!),
       now(),
       now(),
     );
@@ -508,6 +545,7 @@ export function createApi() {
     c.set("session", s!);
     await next();
   });
+  app.get("/api/v1/auth/session", (c) => c.json({ signed_in: true }));
   const admin = (s: Session) => {
     if (s.stepup_until <= now()) fail(403, "PASSKEY_REAUTHENTICATION_REQUIRED");
   };
@@ -588,9 +626,14 @@ export function createApi() {
   app.post("/api/v1/auth/logout", async (c) => {
     await run(
       c.env.DB,
-      "UPDATE device_sessions SET revoked_at=? WHERE id=?",
+      "UPDATE device_sessions SET revoked_at=? WHERE user_id=? AND device_id IS NULL AND revoked_at IS NULL",
       now(),
-      c.get("session").id,
+      c.get("session").user_id,
+    );
+    const secure = c.env.ORIGIN.startsWith("https://") ? "; Secure" : "";
+    c.header(
+      "Set-Cookie",
+      `mouse_stats_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure}`,
     );
     return c.json({ ok: true });
   });

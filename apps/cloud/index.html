@@ -13,6 +13,9 @@
       <p class="muted">
         ユーザー名とPasskeyで安全に接続。<br />メールアドレス・パスワードは不要です。
       </p>
+      <p class="muted">
+        ログイン状態はこのブラウザーに30日間保持されます。共有PCではログアウトしてください。
+      </p>
       <section id="auth">
         <label
           >ユーザー名<input
@@ -80,8 +83,8 @@
             まだ同期データがありません。Windowsアプリの設定でクラウド同期を有効にしてください。
           </p>
         </section>
-        <section id="account-settings">
-          <h2>アカウント管理・デバイス</h2>
+        <details id="account-settings" open>
+          <summary>アカウント管理・デバイス</summary>
           <p class="muted">管理操作の有効時間は再認証後5分間です。</p>
           <h3>Passkey</h3>
           <div id="passkeys"></div>
@@ -100,7 +103,7 @@
           <p class="muted">統計を削除すると、オフラインだったPCの旧データの再送も拒否します。</p>
           <button id="reset" class="danger">クラウド統計をすべて削除</button
           ><button id="delete" class="danger">アカウントを削除</button>
-        </section>
+        </details>
       </section>
       <section id="confirmation" hidden>
         <h3 id="confirmation-title"></h3>

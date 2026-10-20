@@ -20,15 +20,27 @@ function status(message: string) {
   el("status").textContent = message;
 }
 async function api(path: string, body?: unknown, method = body ? "POST" : "GET") {
-  const response = await fetch(`/api/v1${path}`, {
-    method,
-    headers: {
-      ...(body ? { "Content-Type": "application/json" } : {}),
-      ...(access ? { Authorization: `Bearer ${access}` } : {}),
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  const v = await response.json();
+  const request = (withBearer: boolean) =>
+    fetch(`/api/v1${path}`, {
+      method,
+      headers: {
+        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...(withBearer && access ? { Authorization: `Bearer ${access}` } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+  let response = await request(true);
+  let v = await response.json();
+  if (
+    mode === "manage" &&
+    response.status === 401 &&
+    access &&
+    ["SESSION_EXPIRED", "AUTHENTICATION_REQUIRED"].includes(v.error)
+  ) {
+    access = "";
+    response = await request(false);
+    v = await response.json();
+  }
   if (!response.ok) throw Error(v.error ?? `HTTP ${response.status}`);
   return v;
 }
@@ -41,11 +53,20 @@ async function guarded(fn: () => Promise<void>) {
     await fn();
   } catch (e) {
     const reason = e instanceof Error ? e.message : String(e);
-    if (mode === "manage" && ["SESSION_EXPIRED", "AUTHENTICATION_REQUIRED"].includes(reason)) {
+    if (
+      mode === "manage" &&
+      ["SESSION_EXPIRED", "AUTHENTICATION_REQUIRED", "PASSKEY_REAUTHENTICATION_REQUIRED"].includes(
+        reason,
+      )
+    ) {
       access = "";
       el("account").hidden = true;
       el("auth").hidden = false;
-      status("ログインの有効期限が切れました。Passkeyで再度ログインしてください。");
+      status(
+        reason === "PASSKEY_REAUTHENTICATION_REQUIRED"
+          ? "管理操作を続けるにはPasskeyで再認証してください。"
+          : "ログインの有効期限が切れました。Passkeyで再度ログインしてください。",
+      );
     } else {
       status(`操作できませんでした: ${reason}`);
     }
@@ -81,18 +102,28 @@ async function authenticate(kind: "login" | "register") {
     access = result.access_token;
     el("auth").hidden = true;
     el("account").hidden = false;
+    el<HTMLDetailsElement>("account-settings").open = true;
     await load();
     status("再認証しました。管理操作は5分間有効です。");
   }
 }
-async function load() {
-  const [keys, devices] = await Promise.all([api("/passkeys"), api("/devices")]);
+async function load(withManagement = true) {
+  const [keys, devices] = await Promise.all([
+    withManagement ? api("/passkeys") : Promise.resolve({ passkeys: [] }),
+    api("/devices"),
+  ]);
   const deviceSelect = el<HTMLSelectElement>("stats-device");
   deviceSelect.replaceChildren(new Option("全デバイス", ""));
   for (const device of devices.devices.filter((d: { revoked_at: number | null }) => !d.revoked_at))
     deviceSelect.add(new Option(device.name, device.id));
   el("passkeys").replaceChildren();
   el("devices").replaceChildren();
+  if (!withManagement) {
+    const note = document.createElement("p");
+    note.className = "muted";
+    note.textContent = "Passkey管理には再認証が必要です。操作時にログインを求めます。";
+    el("passkeys").append(note);
+  }
   for (const key of keys.passkeys) {
     const div = document.createElement("div");
     div.className = "item";
@@ -309,4 +340,21 @@ if (recovery) {
     await load();
     status("端末固有鍵で確認しました。新しいPasskeyを追加してください。");
   });
+} else if (mode === "manage") {
+  void (async () => {
+    try {
+      await api("/auth/session");
+    } catch {
+      return;
+    }
+    el("auth").hidden = true;
+    el("account").hidden = false;
+    el<HTMLDetailsElement>("account-settings").open = false;
+    try {
+      await load(false);
+      status("ログイン状態を復元しました。");
+    } catch (e) {
+      status(`ログイン状態を復元できませんでした: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  })();
 }

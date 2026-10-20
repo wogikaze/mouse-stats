@@ -53,6 +53,10 @@ test("add, rename and revoke Passkeys through browser management", async ({
   await expect(page.locator("#stats-mouse")).toHaveText("4,567");
   await expect(page.locator("#stats-empty")).toBeHidden();
   await expect(page.locator("#stats-ranking")).toContainText("A");
+  const browserCookie = (await context.cookies()).find(
+    (cookie) => cookie.name === "mouse_stats_session",
+  );
+  expect(browserCookie?.httpOnly).toBe(true);
   await cdp.send("WebAuthn.removeVirtualAuthenticator", { authenticatorId: first.authenticatorId });
   await cdp.send("WebAuthn.addVirtualAuthenticator", { options });
   await page.locator("#key-name").fill("予備のPasskey");
@@ -71,6 +75,13 @@ test("add, rename and revoke Passkeys through browser management", async ({
   await expect(page.locator("#passkeys button").filter({ hasText: "失効済み" })).toHaveCount(1);
   await items.nth(1).getByRole("button", { name: "失効", exact: true }).click();
   await expect(page.locator("#passkeys button").filter({ hasText: "失効済み" })).toHaveCount(1);
+  const restoredSession = page.waitForResponse((r) => r.url().endsWith("/auth/session"));
+  await page.reload();
+  expect((await restoredSession).status()).toBe(200);
+  await expect(page.locator("#stats-keys")).toHaveText("123");
+  await page.locator("#account-settings > summary").click();
+  await page.locator("#add-key").click();
+  await expect(page.locator("#login")).toBeVisible();
   const response = await request.delete("/api/v1/account", {
     headers: { Authorization: `Bearer ${admin}` },
   });

@@ -38,6 +38,8 @@ test("valid synced Passkey assertions with counter zero are accepted repeatedly"
   await page.locator("#register").click();
   expect((await registered).status()).toBe(200);
   await expect(page.locator("#account")).toBeVisible();
+  await page.locator("#logout").click();
+  await expect(page.locator("#login")).toBeVisible();
   const { credentials } = await cdp.send("WebAuthn.getCredentials", { authenticatorId });
   const privateKey = createPrivateKey({
     key: Buffer.from(credentials[0].privateKey, "base64"),
@@ -69,6 +71,10 @@ test("valid synced Passkey assertions with counter zero are accepted repeatedly"
     expect(response.status()).toBe(200);
     admin = (await response.json()).access_token;
     await expect(page.locator("#account")).toBeVisible();
+    if (i === 0) {
+      await page.locator("#logout").click();
+      await expect(page.locator("#login")).toBeVisible();
+    }
   }
   expect(
     (
