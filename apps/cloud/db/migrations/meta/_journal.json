@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1792403197965,
+      "tag": "20261019094637_gifted_thanos",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792404687140,
+      "tag": "20261019101127_living_kat_farrell",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792406365349,
+      "tag": "20261019103925_lethal_sentry",
+      "breakpoints": true
+    }
+  ]
+}

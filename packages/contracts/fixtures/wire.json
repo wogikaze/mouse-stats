@@ -1,0 +1,28 @@
+{
+  "generation": 2,
+  "recordings": [
+    {
+      "id": "c80c653c-a2b4-4e33-8ce3-4493a13c264b",
+      "started_at": 3600,
+      "ended_at": null,
+      "key_schema_version": 1,
+      "data_generation": 2
+    }
+  ],
+  "rows": [
+    {
+      "recording_id": "c80c653c-a2b4-4e33-8ce3-4493a13c264b",
+      "hour_start": 3600,
+      "key_code": null,
+      "value": 5000,
+      "revision": 3
+    },
+    {
+      "recording_id": "c80c653c-a2b4-4e33-8ce3-4493a13c264b",
+      "hour_start": 3600,
+      "key_code": 285,
+      "value": 4,
+      "revision": 2
+    }
+  ]
+}

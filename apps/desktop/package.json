@@ -1,0 +1,23 @@
+{
+  "name": "@mouse-stats/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev --host 127.0.0.1 --port 1420",
+    "build": "vp build",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@mouse-stats/contracts": "*",
+    "@tauri-apps/api": "^2.0.0",
+    "echarts": "^6.0.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@tauri-apps/cli": "^2.0.0",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

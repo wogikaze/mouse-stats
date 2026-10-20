@@ -1,0 +1,36 @@
+name: Deploy Cloud
+on:
+  workflow_dispatch:
+    inputs:
+      origin:
+        description: Fixed HTTPS origin for this account's Passkeys
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: cloud-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: windows-latest
+    environment: production
+    env:
+      MOUSE_STATS_ORIGIN: ${{ inputs.origin }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build -w @mouse-stats/cloud
+      - run: npm run deploy -w @mouse-stats/cloud
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloud-resource-lock
+          path: apps/cloud/void.lock.json

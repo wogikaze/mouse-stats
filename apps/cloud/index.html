@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mouse Stats — アカウント</title>
+  </head>
+  <body>
+    <main>
+      <div class="brand">↗ mouse<span>stats</span></div>
+      <p class="eyebrow">PRIVATE INPUT INSIGHTS</p>
+      <h1>あなたの統計を、<br />どのPCからも。</h1>
+      <p class="muted">
+        ユーザー名とPasskeyで安全に接続。<br />メールアドレス・パスワードは不要です。
+      </p>
+      <section id="auth">
+        <label
+          >ユーザー名<input
+            id="username"
+            autocomplete="username webauthn"
+            pattern="[A-Za-z0-9_-]{3,32}"
+            placeholder="3〜32文字の英数字・_・-"
+        /></label>
+        <div class="actions">
+          <button id="login" class="primary">Passkeyでログイン</button
+          ><button id="register">新しく登録</button>
+        </div>
+        <details>
+          <summary>Passkeyを利用できない場合</summary>
+          <p>保存した単回使用リカバリーコードを入力してください。</p>
+          <input id="recovery-code" autocomplete="off" placeholder="リカバリーコード" /><button
+            id="recover"
+          >
+            コードで復旧
+          </button>
+          <p>
+            Passkey・ログイン済み端末・コードをすべて失うと復旧できません。メールでの本人確認はありません。
+          </p>
+        </details>
+      </section>
+      <p id="status" role="status"></p>
+      <a id="callback" hidden>Windowsアプリへ戻る ↗</a>
+      <section id="account" hidden>
+        <div class="account-heading">
+          <h2>アカウント管理</h2>
+          <button id="logout">ログアウト</button>
+        </div>
+        <p class="muted">管理操作の有効時間は再認証後5分間です。</p>
+        <h3>Passkey</h3>
+        <div id="passkeys"></div>
+        <label
+          >新しいPasskeyの名前<input id="key-name" maxlength="80" value="追加のパスキー" /></label
+        ><button id="add-key">Passkeyを追加</button>
+        <h3>デバイス</h3>
+        <div id="devices"></div>
+        <h3>リカバリー</h3>
+        <p class="muted">
+          発行すると以前のコードは失効します。コードはこの画面に一度だけ表示されます。
+        </p>
+        <button id="recovery">リカバリーコードを発行</button>
+        <pre id="codes"></pre>
+        <h3>データ管理</h3>
+        <p class="muted">統計を削除すると、オフラインだったPCの旧データの再送も拒否します。</p>
+        <button id="reset" class="danger">クラウド統計をすべて削除</button
+        ><button id="delete" class="danger">アカウントを削除</button>
+      </section>
+      <section id="confirmation" hidden>
+        <h3 id="confirmation-title"></h3>
+        <p>取り消せません。「削除」と入力してください。</p>
+        <input id="confirmation-input" autocomplete="off" />
+        <div class="actions">
+          <button id="cancel">キャンセル</button
+          ><button id="confirm-delete" class="danger">削除を実行</button>
+        </div>
+      </section>
+      <footer>
+        入力文字・押下順序・アプリ名は保存しません。<br />クラウドへ送信するのは1時間ごとの集計値のみです。
+      </footer>
+    </main>
+    <script type="module" src="/src/browser.ts"></script>
+  </body>
+</html>

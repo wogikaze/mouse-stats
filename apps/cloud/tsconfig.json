@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "types": ["@cloudflare/workers-types", "node"] },
+  "include": [
+    "src/api.ts",
+    "db/**/*.ts",
+    "routes/**/*.ts",
+    "crons/**/*.ts",
+    "*.ts",
+    "../../packages/contracts/src/**/*.ts"
+  ]
+}

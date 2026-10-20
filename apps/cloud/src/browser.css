@@ -1,0 +1,165 @@
+:root {
+  font-family: "Segoe UI", "Yu Gothic UI", sans-serif;
+  color: #deebe9;
+  background: #0d171e;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 700px;
+  margin: 60px auto;
+  padding: 40px;
+}
+.brand {
+  font-size: 26px;
+  color: #6bd4b9;
+  font-weight: 650;
+}
+.brand span {
+  color: #d2e3e0;
+  font-weight: 300;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #5da793;
+  margin: 45px 0 12px;
+}
+h1 {
+  font-size: 36px;
+  line-height: 1.5;
+  letter-spacing: 1px;
+}
+h2 {
+  font-size: 22px;
+}
+h3 {
+  margin-top: 36px;
+  font-size: 16px;
+}
+p {
+  line-height: 1.9;
+  font-size: 13px;
+}
+.muted,
+footer {
+  color: #86a39f;
+}
+label {
+  display: block;
+  font-size: 12px;
+  margin-top: 30px;
+}
+input {
+  background: #12242c;
+  border: 1px solid #35534e;
+  border-radius: 7px;
+  color: #e0eee9;
+  padding: 13px 15px;
+  font: inherit;
+  width: 100%;
+  margin: 10px 0;
+}
+button,
+a#callback {
+  border: 1px solid #3f5d58;
+  background: #203730;
+  color: #c5ddd6;
+  padding: 12px 16px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+}
+button:hover {
+  background: #2d4c40;
+}
+button:disabled {
+  opacity: 0.45;
+}
+.primary {
+  background: #68d5b5;
+  color: #103429;
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0 28px;
+}
+.danger {
+  color: #eca2a2;
+  background: #392a2d;
+}
+details {
+  color: #789c93;
+  font-size: 12px;
+  margin: 28px 0;
+}
+summary {
+  cursor: pointer;
+}
+#status {
+  color: #8bdebf;
+  overflow-wrap: anywhere;
+}
+footer {
+  border-top: 1px solid #223a35;
+  padding-top: 22px;
+  font-size: 10px;
+  margin-top: 60px;
+}
+#account {
+  border-top: 1px solid #29453d;
+  margin-top: 30px;
+  padding-top: 25px;
+}
+.account-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid #29453d;
+  padding: 16px 0;
+  font-size: 12px;
+}
+.item input {
+  width: 45%;
+  margin: 0;
+}
+.item span {
+  flex: 1;
+}
+.item button {
+  font-size: 10px;
+  padding: 9px;
+}
+pre {
+  font-size: 10px;
+  overflow: auto;
+  color: #8bdebf;
+}
+#confirmation {
+  padding: 25px;
+  border: 1px solid #93525a;
+  background: #302329;
+  margin-top: 25px;
+  border-radius: 8px;
+}
+[hidden] {
+  display: none !important;
+}
+:focus-visible {
+  outline: 2px solid #68d5b5;
+  outline-offset: 3px;
+}

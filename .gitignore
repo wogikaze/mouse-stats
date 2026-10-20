@@ -1,0 +1,16 @@
+node_modules/
+dist/
+target/
+.void/
+.wrangler/
+*.db
+*.db-shm
+*.db-wal
+.env
+.dev.vars
+*.log
+test-results/
+playwright-report/
+apps/desktop/src-tauri/gen/
+apps/cloud/.void-wrangler.jsonc
+!*.example

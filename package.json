@@ -1,0 +1,44 @@
+{
+  "name": "mouse-stats",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev -w @mouse-stats/desktop",
+    "dev:cloud": "npm run dev -w @mouse-stats/cloud",
+    "check": "vp check && vue-tsc --noEmit -p apps/desktop/tsconfig.json && tsc --noEmit -p apps/cloud/tsconfig.json && tsc --noEmit -p apps/cloud/tsconfig.browser.json",
+    "test": "vp test run",
+    "test:ui": "playwright test --config apps/desktop/playwright.config.ts",
+    "test:e2e": "playwright test --config apps/cloud/playwright.config.ts",
+    "test:native": "node scripts/native-smoke.mjs",
+    "test:soak": "node scripts/native-soak.mjs",
+    "build": "npm run build -w @mouse-stats/desktop && npm run build -w @mouse-stats/cloud",
+    "desktop": "npm run tauri -w @mouse-stats/desktop --",
+    "format": "vp fmt"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.28.2",
+    "node": "^24.22.0",
+    "typescript": "~5.9.3",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.3.0",
+    "vite-plus": "1.3.0",
+    "vue-tsc": "^3.1.0"
+  },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.25.12"
+    },
+    "drizzle-kit": {
+      "esbuild": "0.25.12"
+    },
+    "tsx": {
+      "esbuild": "0.28.2"
+    },
+    "vite": "$vite",
+    "vitest": "5.0.5"
+  }
+}

@@ -1,0 +1,49 @@
+[package]
+name = "mouse-stats"
+version = "0.1.0"
+edition = "2021"
+description = "Private hourly Windows input statistics"
+
+[lib]
+name = "mouse_stats_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+tauri-plugin-deep-link = "2"
+tauri-plugin-autostart = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.38", features = ["bundled"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+reqwest = { version = "0.13", features = ["blocking", "json", "rustls"], default-features = false }
+sha2 = "0.10"
+base64 = "0.22"
+rand = "0.9"
+url = "2"
+p256 = { version = "0.13", features = ["ecdsa"] }
+
+[dev-dependencies]
+tiny_http = "0.12"
+
+[target.'cfg(windows)'.dependencies]
+windows-future = "0.3"
+windows = { version = "0.62", features = [
+  "Win32_Foundation",
+  "Win32_UI_WindowsAndMessaging",
+  "Win32_UI_Input",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_System_LibraryLoader",
+  "Win32_System_RemoteDesktop",
+  "Win32_Security_Cryptography",
+  "Win32_System_Memory",
+  "Win32_UI_Shell",
+  "Security_Credentials_UI",
+  "Foundation",
+  "Win32_System_WinRT",
+  "Win32_Networking_WinInet",
+] }
