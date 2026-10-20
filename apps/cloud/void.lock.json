@@ -2,6 +2,7 @@
   "version": 1,
   "source": {
     "name": "mouse-stats",
+    "account_id": "05e7a2aa0fa3b9aff9b9217e9b6ff743",
     "routes": [],
     "workers_dev": true,
     "preview_urls": true
@@ -18,7 +19,8 @@
         "database_id": "65b0fdf0-9cd9-4313-afdc-db410aa1b27b",
         "migrations_dir": "./db/migrations"
       }
-    ]
+    ],
+    "account_id": "05e7a2aa0fa3b9aff9b9217e9b6ff743"
   },
-  "text": "{\n  \"name\": \"mouse-stats\",\n  \"routes\": [],\n  \"workers_dev\": true,\n  \"preview_urls\": true,\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"mouse-stats-db\",\n      \"database_id\": \"65b0fdf0-9cd9-4313-afdc-db410aa1b27b\",\n      \"migrations_dir\": \"./db/migrations\"\n    }\n  ]\n}\n"
+  "text": "{\n  \"name\": \"mouse-stats\",\n  \"routes\": [],\n  \"workers_dev\": true,\n  \"preview_urls\": true,\n  \"d1_databases\": [\n    {\n      \"binding\": \"DB\",\n      \"database_name\": \"mouse-stats-db\",\n      \"database_id\": \"65b0fdf0-9cd9-4313-afdc-db410aa1b27b\",\n      \"migrations_dir\": \"./db/migrations\"\n    }\n  ],\n  \"account_id\": \"05e7a2aa0fa3b9aff9b9217e9b6ff743\"\n}\n"
 }
