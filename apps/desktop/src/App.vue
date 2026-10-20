@@ -273,55 +273,76 @@ onBeforeUnmount(() => {
 <template>
   <div class="shell">
     <aside>
-      <a class="brand" href="#" @click.prevent="tab = 'dashboard'"
-        ><span class="brand-icon">↗</span
-        ><span
-          >mouse<span class="brand-light">stats</span><small>YOUR INPUT, OVER TIME</small></span
-        ></a
+      <a
+        class="brand"
+        href="#"
+        title="Mouse Stats"
+        aria-label="Mouse Stats"
+        @click.prevent="tab = 'dashboard'"
+        ><span class="brand-icon" aria-hidden="true">↗</span></a
       >
-      <div class="nav-caption">ワークスペース</div>
       <nav aria-label="メインメニュー">
-        <button :class="{ active: tab === 'dashboard' }" @click="tab = 'dashboard'">
-          ▦ <span>ダッシュボード</span></button
-        ><button :class="{ active: tab === 'keyboard' }" @click="tab = 'keyboard'">
-          ⌨ <span>キーボード分析</span></button
-        ><button :class="{ active: tab === 'settings' }" @click="tab = 'settings'">
-          ⚙ <span>設定・アカウント</span>
+        <button
+          title="ダッシュボード"
+          aria-label="ダッシュボード"
+          :class="{ active: tab === 'dashboard' }"
+          @click="tab = 'dashboard'"
+        >
+          ▦</button
+        ><button
+          title="キーボード"
+          aria-label="キーボード"
+          :class="{ active: tab === 'keyboard' }"
+          @click="tab = 'keyboard'"
+        >
+          ⌨</button
+        ><button
+          title="設定"
+          aria-label="設定"
+          :class="{ active: tab === 'settings' }"
+          @click="tab = 'settings'"
+        >
+          ⚙
         </button>
       </nav>
-      <div class="sidebar-bottom">
-        <span :class="['dot', { paused: state.settings.paused || !state.settings.consent }]"></span
-        >{{
-          state.settings.consent && !state.settings.paused
-            ? "バックグラウンド計測中"
-            : "計測停止中"
-        }}<small>集計データはこのPCに保存されます</small
-        ><span class="version">Mouse Stats / v0.1.1</span>
+      <div
+        class="sidebar-bottom"
+        :title="state.settings.consent && !state.settings.paused ? '計測中' : '停止中'"
+      >
+        <span :class="['dot', { paused: state.settings.paused || !state.settings.consent }]"></span>
+        <span class="sr-only">{{
+          state.settings.consent && !state.settings.paused ? "計測中" : "停止中"
+        }}</span>
       </div>
     </aside>
     <main>
       <header>
-        <div class="breadcrumb">
-          ワークスペース
-          <span
-            >/
-            {{
-              tab === "dashboard"
-                ? "ダッシュボード"
-                : tab === "keyboard"
-                  ? "キーボード分析"
-                  : "設定・アカウント"
-            }}</span
-          >
+        <div class="breadcrumb" aria-hidden="true">
+          {{ tab === "dashboard" ? "▦" : tab === "keyboard" ? "⌨" : "⚙" }}
         </div>
         <div class="header-actions">
-          <span class="badge">{{ state.sync_status }}</span
-          ><button
+          <span
+            class="badge sync-indicator"
+            :title="state.sync_status"
+            :aria-label="state.sync_status"
+            >{{
+              state.sync_status === "同期済み"
+                ? "☁✓"
+                : state.sync_status === "同期中"
+                  ? "↻"
+                  : state.signed_in
+                    ? "☁!"
+                    : "☁"
+            }}</span
+          >
+          <button
             class="subtle"
             :disabled="busy || !native || !state.settings.consent"
+            :title="state.settings.paused ? '計測を再開' : '計測を一時停止'"
+            :aria-label="state.settings.paused ? '計測を再開' : '計測を一時停止'"
             @click="togglePause"
           >
-            {{ state.settings.paused ? "▶ 再開" : "Ⅱ 一時停止" }}
+            {{ state.settings.paused ? "▶" : "Ⅱ" }}
           </button>
         </div>
       </header>
@@ -341,23 +362,19 @@ onBeforeUnmount(() => {
       <div class="content">
         <div class="title-row">
           <div>
-            <div class="eyebrow">{{ tab === "settings" ? "PREFERENCES" : "INPUT INSIGHTS" }}</div>
+            <div class="eyebrow" aria-hidden="true">{{ tab === "settings" ? "⚙" : "⌁" }}</div>
             <h1>
-              {{
+              <span class="sr-only">{{
                 tab === "dashboard"
-                  ? "日々の操作を、ひと目で。"
+                  ? "ダッシュボード"
                   : tab === "keyboard"
                     ? "キーボード分析"
                     : "設定・アカウント"
-              }}
+              }}</span>
+              <span aria-hidden="true">{{
+                tab === "dashboard" ? "⌁" : tab === "keyboard" ? "⌨" : "⚙"
+              }}</span>
             </h1>
-            <p class="muted">
-              {{
-                tab === "settings"
-                  ? "計測も同期も、自分でコントロール。"
-                  : "入力内容を残さず、あなたの操作の傾向を可視化します。"
-              }}
-            </p>
           </div>
           <span class="date-label">{{ today }}</span>
         </div>
@@ -366,22 +383,24 @@ onBeforeUnmount(() => {
             <div class="segmented">
               <button
                 v-for="p in [
-                  { id: '1', label: '今日' },
-                  { id: '7', label: '7日' },
-                  { id: '30', label: '30日' },
-                  { id: 'all', label: '全期間' },
-                  { id: 'custom', label: '任意期間' },
+                  { id: '1', label: '◷', hint: '今日' },
+                  { id: '7', label: '7', hint: '過去7日' },
+                  { id: '30', label: '30', hint: '過去30日' },
+                  { id: 'all', label: '∞', hint: '全期間' },
+                  { id: 'custom', label: '▤', hint: '任意期間' },
                 ]"
                 :key="p.id"
                 :class="{ selected: period === p.id }"
+                :title="p.hint"
+                :aria-label="p.hint"
                 @click="period = p.id"
               >
                 {{ p.label }}
               </button>
             </div>
             <select v-model="device" aria-label="デバイス">
-              <option value="">全デバイス</option>
-              <option :value="state.device_id">このPC</option>
+              <option value="" title="全デバイス">◎</option>
+              <option :value="state.device_id" title="このPC">▣</option>
               <option
                 v-for="d in state.devices.filter((d) => d.id !== state.device_id)"
                 :key="d.id"
@@ -389,7 +408,7 @@ onBeforeUnmount(() => {
               >
                 {{ d.name }}{{ d.revoked_at ? "（失効）" : "" }}
               </option></select
-            ><span class="tz">{{ draft.timezone }}</span>
+            ><span class="tz" :title="draft.timezone" :aria-label="draft.timezone">◷</span>
           </div>
           <div v-if="period === 'custom'" class="custom-range">
             <input v-model="from" type="date" aria-label="開始日" /> →
@@ -408,37 +427,65 @@ onBeforeUnmount(() => {
           <template v-if="tab === 'dashboard'">
             <div class="cards">
               <article class="stat-card">
-                <span>KEY PRESSES <span class="stat-icon">⌨</span></span>
-                <div class="big">{{ format(stats.presses) }}<small>回</small></div>
-                <p>物理キーの初回押下のみ</p>
+                <span class="stat-icon" title="物理キーの押下回数" aria-label="物理キーの押下回数"
+                  >⌨</span
+                >
+                <div class="big" :title="`${format(stats.presses)} 回`">
+                  {{ format(stats.presses) }}
+                </div>
               </article>
               <article class="stat-card">
-                <span>MOUSE MOVEMENT <span class="stat-icon">↗</span></span>
-                <div class="big">{{ format(stats.mouse / 1000) }}<small>counts</small></div>
-                <p>Raw Input の相対移動量</p>
+                <span class="stat-icon" title="マウス移動量" aria-label="マウス移動量">↗</span>
+                <div class="big" :title="`${format(stats.mouse / 1000)} counts`">
+                  {{ format(stats.mouse / 1000) }}
+                </div>
               </article>
               <article class="stat-card status-card">
-                <span>RECORDING STATUS</span>
-                <div class="status-text">
+                <span class="stat-icon" title="計測状態" aria-label="計測状態">◉</span>
+                <div
+                  class="status-text"
+                  :title="state.settings.consent && !state.settings.paused ? '計測中' : '停止中'"
+                >
                   <span
                     :class="['dot', { paused: state.settings.paused || !state.settings.consent }]"
                   ></span
-                  >{{ state.settings.consent && !state.settings.paused ? "計測中" : "停止中" }}
+                  ><span class="sr-only">{{
+                    state.settings.consent && !state.settings.paused ? "計測中" : "停止中"
+                  }}</span>
                 </div>
-                <p>最終保存 {{ date(state.last_saved) }}</p>
+                <p class="save-mark" :title="`最終保存 ${date(state.last_saved)}`">
+                  ◷
+                  {{
+                    state.last_saved
+                      ? new Date(state.last_saved * 1000).toLocaleTimeString("ja-JP", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "—"
+                  }}
+                </p>
               </article>
             </div>
             <section class="panel">
               <div class="panel-heading">
                 <div>
-                  <h2>年間アクティビティ</h2>
-                  <p>過去52週の日別合計</p>
+                  <h2 title="過去52週の日別アクティビティ">▦</h2>
                 </div>
                 <div class="segmented compact">
-                  <button :class="{ selected: metric === 'keys' }" @click="metric = 'keys'">
-                    キー入力</button
-                  ><button :class="{ selected: metric === 'mouse' }" @click="metric = 'mouse'">
-                    マウス
+                  <button
+                    title="キー入力"
+                    aria-label="キー入力"
+                    :class="{ selected: metric === 'keys' }"
+                    @click="metric = 'keys'"
+                  >
+                    ⌨</button
+                  ><button
+                    title="マウス移動"
+                    aria-label="マウス移動"
+                    :class="{ selected: metric === 'mouse' }"
+                    @click="metric = 'mouse'"
+                  >
+                    ↗
                   </button>
                 </div>
               </div>
@@ -456,16 +503,17 @@ onBeforeUnmount(() => {
               </div>
               <div class="calendar-caption">
                 <span>{{ daysAgo(363) }} — {{ today }}</span
-                ><span>少 <i></i><i></i><i></i><i></i> 多</span>
+                ><span title="少ない → 多い"><i></i><i></i><i></i><i></i></span>
               </div>
             </section>
             <section class="panel">
               <div class="panel-heading">
                 <div>
-                  <h2>時間帯の傾向</h2>
-                  <p>選択期間のローカル時間帯別合計</p>
+                  <h2 title="時間帯別の傾向">◷</h2>
                 </div>
-                <span class="badge">{{ metric === "keys" ? "キー入力数" : "raw counts" }}</span>
+                <span class="badge" :title="metric === 'keys' ? 'キー入力数' : 'マウス移動量'">{{
+                  metric === "keys" ? "⌨" : "↗"
+                }}</span>
               </div>
               <Chart
                 v-if="uiActive"
@@ -475,7 +523,7 @@ onBeforeUnmount(() => {
               />
             </section>
             <details class="panel">
-              <summary>UTC時間枠ごとの詳細（DSTの重複時刻をオフセットで区別）</summary>
+              <summary title="UTC時間枠ごとの詳細">▤</summary>
               <Chart
                 v-if="uiActive"
                 :labels="hourData.labels"
@@ -484,20 +532,30 @@ onBeforeUnmount(() => {
               />
             </details>
             <section class="panel">
-              <h2>期間別サマリー</h2>
+              <h2 title="期間別サマリー">▥</h2>
               <table>
                 <thead>
                   <tr>
-                    <th>期間</th>
-                    <th>キー入力</th>
-                    <th>マウス移動</th>
+                    <th title="期間">◷</th>
+                    <th title="キー入力">⌨</th>
+                    <th title="マウス移動">↗</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="t in totals" :key="t.label">
-                    <td>{{ t.label }}</td>
-                    <td>{{ format(t.keys) }} 回</td>
-                    <td>{{ format(t.mouse) }} counts</td>
+                    <td :title="t.label">
+                      {{
+                        t.label === "今日"
+                          ? "◷"
+                          : t.label === "過去7日"
+                            ? "7"
+                            : t.label === "過去30日"
+                              ? "30"
+                              : "∞"
+                      }}
+                    </td>
+                    <td>{{ format(t.keys) }}</td>
+                    <td>{{ format(t.mouse) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -507,8 +565,7 @@ onBeforeUnmount(() => {
             ><section class="panel">
               <div class="panel-heading">
                 <div>
-                  <h2>物理キーボードヒートマップ</h2>
-                  <p>キー名は配列上の位置の目安です。入力文字は保存しません。</p>
+                  <h2 title="物理キーボードの押下ヒートマップ">⌨</h2>
                 </div>
                 <select v-model="draft.layout" aria-label="キーボード配列" @change="save">
                   <option>US</option>
@@ -555,128 +612,208 @@ onBeforeUnmount(() => {
               </div>
             </section>
             <section class="panel">
-              <h2>キーランキング</h2>
-              <p v-if="!ranking.length" class="empty">この期間の記録はまだありません。</p>
+              <h2 title="キー別の回数">▥</h2>
+              <p v-if="!ranking.length" class="empty" title="この期間の記録はありません">⌁</p>
               <div v-for="([key, value], i) in ranking" :key="key" class="ranking">
                 <span>{{ i + 1 }}</span
                 ><b>{{ labels.get(key) ?? (key === 0 ? "Unknown" : `0x${key.toString(16)}`) }}</b>
                 <div class="rank-track">
                   <div :style="{ width: `${(value / maxKey) * 100}%` }"></div>
                 </div>
-                <span>{{ format(value) }} 回</span>
+                <span>{{ format(value) }}</span>
               </div>
             </section></template
           >
-          <p class="footnote">
+          <p class="footnote sr-only">
             0は停止・未接続・記録なしを含む場合があります。別PCの値は最終同期時点の情報です。
           </p>
         </template>
         <template v-else>
           <section class="panel">
-            <h2>計測と表示</h2>
-            <label class="setting"
+            <h2 title="計測と表示">◉</h2>
+            <label class="setting" data-icon="↗" title="Windowsログイン時に起動"
               ><span>Windowsログイン時に起動<small>トレイでバックグラウンド起動します</small></span
-              ><input v-model="draft.autostart" type="checkbox" /></label
-            ><label class="setting"
-              ><span>計測を一時停止</span><input v-model="draft.paused" type="checkbox" /></label
-            ><label class="setting"
+              ><input
+                v-model="draft.autostart"
+                type="checkbox"
+                aria-label="Windowsログイン時に起動" /></label
+            ><label class="setting" data-icon="Ⅱ" title="計測を一時停止"
+              ><span>計測を一時停止</span
+              ><input v-model="draft.paused" type="checkbox" aria-label="計測を一時停止" /></label
+            ><label class="setting" data-icon="◷" title="タイムゾーン"
               ><span>タイムゾーン<small>IANA形式（例: Asia/Tokyo）</small></span
-              ><input v-model="draft.timezone" placeholder="Asia/Tokyo" /></label
-            ><label class="setting"
+              ><input v-model="draft.timezone" aria-label="タイムゾーン" placeholder="◷" /></label
+            ><label class="setting" data-icon="⌨" title="キーボード配列"
               ><span>キーボード配列</span
               ><select v-model="draft.layout" aria-label="キーボード配列">
                 <option>US</option>
                 <option>JIS</option>
               </select></label
-            ><button class="primary" :disabled="busy" @click="save">設定を保存</button>
+            ><button
+              class="primary"
+              title="設定を保存"
+              aria-label="設定を保存"
+              :disabled="busy"
+              @click="save"
+            >
+              ✓
+            </button>
           </section>
           <section class="panel">
             <div class="panel-heading">
               <div>
-                <h2>クラウド同期</h2>
-                <p>任意・アカウントなしでもすべてのローカル統計を利用できます。</p>
+                <h2 title="クラウド同期">☁</h2>
               </div>
-              <span class="badge">{{ state.signed_in ? "ログイン済み" : "未ログイン" }}</span>
+              <span class="badge" :title="state.signed_in ? 'ログイン済み' : '未ログイン'">{{
+                state.signed_in ? "☁✓" : "☁"
+              }}</span>
             </div>
-            <label class="setting"
+            <label class="setting" data-icon="↗" title="クラウドURL"
               ><span>クラウドURL</span
               ><input
                 v-model="draft.cloud_url"
                 type="url"
-                placeholder="https://your-app.workers.dev" /></label
-            ><label class="setting"
+                aria-label="クラウドURL"
+                placeholder="☁" /></label
+            ><label class="setting" data-icon="☁" title="クラウド同期を有効にする"
               ><span
                 >クラウド同期を有効にする<small
                   >時間別のキー回数・マウスcountsを送信します</small
                 ></span
-              ><input v-model="draft.sync_enabled" type="checkbox" /></label
-            ><label class="setting"
+              ><input
+                v-model="draft.sync_enabled"
+                type="checkbox"
+                aria-label="クラウド同期を有効にする" /></label
+            ><label class="setting" data-icon="↟" title="過去の記録もアップロード"
               ><span
                 >初回接続時に過去のローカル統計も送信する<small
                   >OFFの場合は接続後の新しい記録のみが対象です</small
                 ></span
-              ><input v-model="draft.upload_history" type="checkbox" :disabled="state.signed_in"
+              ><input
+                v-model="draft.upload_history"
+                type="checkbox"
+                aria-label="過去の記録もアップロード"
+                :disabled="state.signed_in"
             /></label>
             <div class="button-row">
-              <button class="primary" :disabled="busy" @click="save">同期設定を保存</button
-              ><button :disabled="busy" @click="action('begin_login')">
-                Passkeyで登録 / ログイン</button
-              ><button :disabled="!state.signed_in || busy" @click="action('sync_now')">
-                今すぐ同期</button
-              ><button :disabled="!state.signed_in || busy" @click="action('logout')">
-                ログアウト
+              <button
+                class="primary"
+                title="同期設定を保存"
+                aria-label="同期設定を保存"
+                :disabled="busy"
+                @click="save"
+              >
+                ✓</button
+              ><button
+                title="Passkeyでログイン"
+                aria-label="Passkeyで登録 / ログイン"
+                :disabled="busy"
+                @click="action('begin_login')"
+              >
+                ⚿</button
+              ><button
+                title="今すぐ同期"
+                aria-label="今すぐ同期"
+                :disabled="!state.signed_in || busy"
+                @click="action('sync_now')"
+              >
+                ↻</button
+              ><button
+                title="ログアウト"
+                aria-label="ログアウト"
+                :disabled="!state.signed_in || busy"
+                @click="action('logout')"
+              >
+                ⇥
               </button>
             </div>
-            <p class="muted">最終同期 {{ date(state.last_sync) }}</p>
-            <p class="muted">同じPCの別インストールを同時に動かすと重複計測されます。</p>
+            <p class="muted sync-time" :title="`最終同期 ${date(state.last_sync)}`">
+              ◷
+              {{
+                state.last_sync
+                  ? new Date(state.last_sync * 1000).toLocaleTimeString("ja-JP", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "—"
+              }}
+            </p>
           </section>
           <section class="panel">
-            <h2>デバイスとアカウント</h2>
-            <p class="muted">
+            <h2 title="デバイスとアカウント">♙</h2>
+            <p class="muted sr-only">
               Passkeyの追加・名前変更・失効、デバイス失効、リカバリーコード、統計削除・アカウント削除はブラウザで再認証して操作します。
             </p>
-            <button @click="action('manage_account')">アカウント管理を開く ↗</button>
-            <button :disabled="!state.signed_in || busy" @click="action('recover_device')">
-              Windows Helloで端末から復旧
+            <button
+              title="アカウント管理"
+              aria-label="アカウント管理"
+              @click="action('manage_account')"
+            >
+              ↗
             </button>
-            <p class="muted">
+            <button
+              title="Windows Helloで復旧"
+              aria-label="Windows Helloで端末から復旧"
+              :disabled="!state.signed_in || busy"
+              @click="action('recover_device')"
+            >
+              ♙
+            </button>
+            <p class="muted sr-only">
               Passkeyを失っても、ログイン済みPCの端末固有鍵とWindows
               Helloで本人確認できます。Helloが使えない場合は復旧コードを使ってください。
             </p>
-            <button @click="confirm = 'device'">新しいPCとして再登録</button>
+            <button
+              title="新しいPCとして再登録"
+              aria-label="新しいPCとして再登録"
+              @click="confirm = 'device'"
+            >
+              ▣
+            </button>
             <table v-if="state.devices.length">
               <thead>
                 <tr>
-                  <th>デバイス</th>
-                  <th>最終接続</th>
-                  <th>状態</th>
+                  <th title="デバイス">♙</th>
+                  <th title="最終接続">◷</th>
+                  <th title="状態">●</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="d in state.devices" :key="d.id">
-                  <td>{{ d.name }}{{ d.id === state.device_id ? "（このPC）" : "" }}</td>
-                  <td>{{ date(d.last_seen) }}</td>
-                  <td>{{ d.revoked_at ? "失効" : "有効" }}</td>
+                  <td :title="d.name">{{ d.id === state.device_id ? "●" : "○" }}</td>
+                  <td :title="date(d.last_seen)">
+                    {{
+                      d.last_seen ? new Date(d.last_seen * 1000).toLocaleDateString("ja-JP") : "—"
+                    }}
+                  </td>
+                  <td :title="d.revoked_at ? '失効' : '有効'">{{ d.revoked_at ? "⊘" : "✓" }}</td>
                 </tr>
               </tbody>
             </table>
           </section>
           <section class="panel">
-            <h2>プライバシーとデータ</h2>
-            <p class="muted">
+            <h2 title="プライバシーとデータ">◈</h2>
+            <p class="muted sr-only">
               入力文字・キーの押下順序・アプリ名・ウィンドウ名・クリップボードは保存しません。保存するのはUTCの1時間単位の集計値だけです。ウィンドウを閉じても計測は続きます。完全に終了するにはトレイの「終了」を選択してください。
             </p>
-            <p class="muted">
+            <p class="muted sr-only">
               Passkey・ログイン済み端末・リカバリーコードをすべて失った場合、アカウントを復旧できません。
             </p>
-            <button class="danger" @click="confirm = 'local'">このPCの統計を削除</button>
-            <p class="muted">
+            <button
+              class="danger"
+              title="このPCの統計を削除"
+              aria-label="このPCの統計を削除"
+              @click="confirm = 'local'"
+            >
+              ⌫
+            </button>
+            <p class="muted sr-only">
               クラウド統計は残ります。クラウドの削除はアカウント管理から行ってください。
             </p>
           </section>
         </template>
       </div>
-      <footer>
+      <footer class="sr-only">
         プライバシーを大切にする入力統計 <span>最終保存 {{ date(state.last_saved) }}</span>
       </footer>
     </main>
