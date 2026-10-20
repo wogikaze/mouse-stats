@@ -1,4 +1,5 @@
 import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
+import { keyboard, localDay, summarize, type StatsRow } from "@mouse-stats/contracts";
 import "./browser.css";
 const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const input = (id: string) => el<HTMLInputElement>(id).value.trim();
@@ -7,6 +8,7 @@ const params = new URLSearchParams(location.search),
 let access = "",
   busy = false,
   deletion = "";
+let statsRows: StatsRow[] = [];
 const random = () =>
   btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
     .replaceAll("+", "-")
@@ -38,7 +40,15 @@ async function guarded(fn: () => Promise<void>) {
   try {
     await fn();
   } catch (e) {
-    status(`操作できませんでした: ${e instanceof Error ? e.message : String(e)}`);
+    const reason = e instanceof Error ? e.message : String(e);
+    if (mode === "manage" && ["SESSION_EXPIRED", "AUTHENTICATION_REQUIRED"].includes(reason)) {
+      access = "";
+      el("account").hidden = true;
+      el("auth").hidden = false;
+      status("ログインの有効期限が切れました。Passkeyで再度ログインしてください。");
+    } else {
+      status(`操作できませんでした: ${reason}`);
+    }
   } finally {
     busy = false;
     document.querySelectorAll("button").forEach((b) => (b.disabled = false));
@@ -77,6 +87,10 @@ async function authenticate(kind: "login" | "register") {
 }
 async function load() {
   const [keys, devices] = await Promise.all([api("/passkeys"), api("/devices")]);
+  const deviceSelect = el<HTMLSelectElement>("stats-device");
+  deviceSelect.replaceChildren(new Option("全デバイス", ""));
+  for (const device of devices.devices.filter((d: { revoked_at: number | null }) => !d.revoked_at))
+    deviceSelect.add(new Option(device.name, device.id));
   el("passkeys").replaceChildren();
   el("devices").replaceChildren();
   for (const key of keys.passkeys) {
@@ -130,7 +144,94 @@ async function load() {
     }
     el("devices").append(div);
   }
+  await refreshStats();
 }
+function dayOffset(day: string, amount: number) {
+  const date = new Date(`${day}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + amount);
+  return date.toISOString().slice(0, 10);
+}
+async function refreshStats() {
+  const timezone = el<HTMLInputElement>("stats-timezone").value.trim() || "UTC";
+  const today = localDay(Date.now() / 1000, timezone);
+  const period = el<HTMLSelectElement>("stats-period").value;
+  const from = period === "all" ? "" : dayOffset(today, -(Number(period) - 1));
+  const device = el<HTMLSelectElement>("stats-device").value;
+  let cursor = "";
+  statsRows = [];
+  do {
+    const query = new URLSearchParams({ from, to: today, timezone });
+    if (device) query.set("device", device);
+    if (cursor) query.set("cursor", cursor);
+    const page = await api(`/stats?${query}`);
+    statsRows.push(...(page.rows as StatsRow[]));
+    cursor = page.next_cursor ?? "";
+  } while (cursor);
+  drawStats(timezone, today, from);
+}
+function drawStats(timezone: string, today: string, from: string) {
+  const data = summarize(statsRows, timezone, from, today);
+  const number = (value: number) => new Intl.NumberFormat("ja-JP").format(value);
+  el("stats-keys").textContent = number(data.presses);
+  el("stats-mouse").textContent = number(data.mouse);
+  const days = el("stats-days");
+  days.replaceChildren();
+  const count = Math.min(
+    30,
+    from
+      ? Math.max(
+          7,
+          Math.ceil(
+            (Date.parse(`${today}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000,
+          ) + 1,
+        )
+      : 30,
+  );
+  const series = Array.from({ length: count }, (_, index) => {
+    const day = dayOffset(today, index - count + 1);
+    return { day, value: data.days.get(day)?.keys ?? 0 };
+  });
+  const max = Math.max(1, ...series.map((item) => item.value));
+  for (const item of series) {
+    const bar = document.createElement("span");
+    bar.title = `${item.day}: ${number(item.value)}回`;
+    bar.style.height = `${Math.max(3, (item.value / max) * 100)}%`;
+    if (!item.value) bar.classList.add("empty");
+    days.append(bar);
+  }
+  const labels = new Map(
+    keyboard("JIS")
+      .flat()
+      .map((key) => [key.code, key.label]),
+  );
+  const ranking = el("stats-ranking");
+  ranking.replaceChildren();
+  const entries = Array.from(data.keys)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12);
+  for (const [code, value] of entries) {
+    const item = document.createElement("li");
+    const key = document.createElement("b");
+    key.textContent = labels.get(code) ?? (code === 0 ? "Unknown" : `0x${code.toString(16)}`);
+    const total = document.createElement("span");
+    total.textContent = `${number(value)} 回`;
+    item.append(key, total);
+    ranking.append(item);
+  }
+  el("stats-empty").hidden = statsRows.length > 0;
+}
+for (const id of ["stats-period", "stats-device"])
+  el(id).addEventListener("change", () => void guarded(refreshStats));
+el("stats-timezone").addEventListener(
+  "change",
+  () =>
+    void guarded(async () => {
+      new Intl.DateTimeFormat("en", {
+        timeZone: el<HTMLInputElement>("stats-timezone").value.trim() || "UTC",
+      });
+      await refreshStats();
+    }),
+);
 el("login").onclick = () => void guarded(() => authenticate("login"));
 el("register").onclick = () => void guarded(() => authenticate("register"));
 el("recover").onclick = () =>

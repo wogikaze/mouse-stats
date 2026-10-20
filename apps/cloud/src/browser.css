@@ -163,3 +163,116 @@ pre {
   outline: 2px solid #68d5b5;
   outline-offset: 3px;
 }
+.stats-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 14px;
+  align-items: end;
+  margin: 24px 0;
+}
+.stats-filters label {
+  margin: 0;
+}
+.stats-filters select {
+  display: block;
+  width: 100%;
+  margin-top: 9px;
+  border: 1px solid #35534e;
+  border-radius: 7px;
+  padding: 12px;
+  color: #e0eee9;
+  background: #12242c;
+  font: inherit;
+}
+.stats-filters input {
+  margin-bottom: 0;
+}
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+.stats-cards article {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 5px;
+  padding: 20px;
+  border: 1px solid #29453d;
+  border-radius: 10px;
+  background: #122129;
+}
+.stats-cards article span {
+  grid-column: 1 / -1;
+  color: #86a39f;
+  font-size: 12px;
+}
+.stats-cards strong {
+  color: #8bdebf;
+  font-size: clamp(22px, 5vw, 34px);
+  overflow-wrap: anywhere;
+}
+.stats-cards small {
+  color: #86a39f;
+}
+.stats-days {
+  display: grid;
+  grid-template-columns: repeat(30, minmax(3px, 1fr));
+  align-items: end;
+  gap: 4px;
+  height: 150px;
+  padding: 12px;
+  border: 1px solid #29453d;
+  border-radius: 10px;
+  background: #122129;
+}
+.stats-days span {
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: #68d5b5;
+}
+.stats-days span.empty {
+  height: 3px !important;
+  background: #294039;
+}
+.stats-ranking {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.stats-ranking li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #29453d;
+  border-radius: 7px;
+  color: #86a39f;
+  font-size: 12px;
+}
+.stats-ranking b {
+  color: #c5ddd6;
+}
+#account-settings {
+  margin-top: 48px;
+  border-top: 1px solid #29453d;
+  padding-top: 20px;
+}
+@media (max-width: 560px) {
+  main {
+    margin: 16px auto;
+    padding: 22px;
+  }
+  h1 {
+    font-size: 29px;
+  }
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+  .stats-days {
+    gap: 2px;
+  }
+}

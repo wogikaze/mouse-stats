@@ -42,27 +42,65 @@
       <a id="callback" hidden>Windowsアプリへ戻る ↗</a>
       <section id="account" hidden>
         <div class="account-heading">
-          <h2>アカウント管理</h2>
+          <h2>クラウド統計</h2>
           <button id="logout">ログアウト</button>
         </div>
-        <p class="muted">管理操作の有効時間は再認証後5分間です。</p>
-        <h3>Passkey</h3>
-        <div id="passkeys"></div>
-        <label
-          >新しいPasskeyの名前<input id="key-name" maxlength="80" value="追加のパスキー" /></label
-        ><button id="add-key">Passkeyを追加</button>
-        <h3>デバイス</h3>
-        <div id="devices"></div>
-        <h3>リカバリー</h3>
-        <p class="muted">
-          発行すると以前のコードは失効します。コードはこの画面に一度だけ表示されます。
-        </p>
-        <button id="recovery">リカバリーコードを発行</button>
-        <pre id="codes"></pre>
-        <h3>データ管理</h3>
-        <p class="muted">統計を削除すると、オフラインだったPCの旧データの再送も拒否します。</p>
-        <button id="reset" class="danger">クラウド統計をすべて削除</button
-        ><button id="delete" class="danger">アカウントを削除</button>
+        <p class="muted">Windowsアプリから同期された統計を表示します。</p>
+        <section id="web-stats">
+          <div class="stats-filters">
+            <label
+              >期間<select id="stats-period" aria-label="統計の期間">
+                <option value="7">過去7日</option>
+                <option value="30">過去30日</option>
+                <option value="all">全期間</option>
+              </select></label
+            >
+            <label
+              >デバイス<select id="stats-device" aria-label="統計のデバイス">
+                <option value="">全デバイス</option>
+              </select></label
+            >
+            <label
+              >タイムゾーン<input id="stats-timezone" value="Asia/Tokyo" aria-label="タイムゾーン"
+            /></label>
+          </div>
+          <div class="stats-cards">
+            <article>
+              <span>キー入力</span><strong id="stats-keys">—</strong><small>回</small>
+            </article>
+            <article>
+              <span>マウス移動</span><strong id="stats-mouse">—</strong><small>counts</small>
+            </article>
+          </div>
+          <h3>日別のキー入力</h3>
+          <div id="stats-days" class="stats-days" aria-label="日別のキー入力"></div>
+          <h3>キー入力ランキング</h3>
+          <ol id="stats-ranking" class="stats-ranking"></ol>
+          <p id="stats-empty" class="muted" hidden>
+            まだ同期データがありません。Windowsアプリの設定でクラウド同期を有効にしてください。
+          </p>
+        </section>
+        <section id="account-settings">
+          <h2>アカウント管理・デバイス</h2>
+          <p class="muted">管理操作の有効時間は再認証後5分間です。</p>
+          <h3>Passkey</h3>
+          <div id="passkeys"></div>
+          <label
+            >新しいPasskeyの名前<input id="key-name" maxlength="80" value="追加のパスキー" /></label
+          ><button id="add-key">Passkeyを追加</button>
+          <h3>デバイス</h3>
+          <div id="devices"></div>
+          <h3>リカバリー</h3>
+          <p class="muted">
+            発行すると以前のコードは失効します。コードはこの画面に一度だけ表示されます。
+          </p>
+          <button id="recovery">リカバリーコードを発行</button>
+          <pre id="codes"></pre>
+          <h3>データ管理</h3>
+          <p class="muted">統計を削除すると、オフラインだったPCの旧データの再送も拒否します。</p>
+          <button id="reset" class="danger">クラウド統計をすべて削除</button
+          ><button id="delete" class="danger">アカウントを削除</button>
+        </section>
       </section>
       <section id="confirmation" hidden>
         <h3 id="confirmation-title"></h3>
