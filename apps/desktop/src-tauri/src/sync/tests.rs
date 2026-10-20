@@ -24,6 +24,7 @@ impl Fixture {
         std::fs::create_dir(&directory).unwrap();
         let mut runtime = crate::native_tests::memory_runtime(false);
         Arc::get_mut(&mut runtime).unwrap().secret_path = directory.join("session.dpapi");
+        Arc::get_mut(&mut runtime).unwrap().pending_path = directory.join("pending-login.dpapi");
         Arc::get_mut(&mut runtime).unwrap().identity_path = directory.join("identity.dpapi");
         {
             let mut db = runtime.db.lock().unwrap();
@@ -607,6 +608,36 @@ fn persist_fixture_session(fixture: &Fixture) {
         created: now(),
         cloud_url: session.cloud_url,
     });
+}
+#[cfg(windows)]
+#[test]
+fn pending_device_login_is_restored_after_restart_and_expires_after_five_minutes() {
+    let fixture = Fixture::new(|_, _, _| (500, json!({})));
+    let pending = Pending {
+        state: "login-state".into(),
+        verifier: "pkce-verifier".into(),
+        created: now(),
+        cloud_url: "https://mouse-stats.example".into(),
+    };
+    secret::save(
+        &fixture.runtime.pending_path,
+        &serde_json::to_vec(&pending).unwrap(),
+    )
+    .unwrap();
+    let restored = restore_pending(&fixture.runtime.pending_path).unwrap();
+    assert_eq!(restored.state, pending.state);
+    assert_eq!(restored.verifier, pending.verifier);
+
+    let expired = Pending {
+        created: now() - 301,
+        ..pending
+    };
+    secret::save(
+        &fixture.runtime.pending_path,
+        &serde_json::to_vec(&expired).unwrap(),
+    )
+    .unwrap();
+    assert!(restore_pending(&fixture.runtime.pending_path).is_none());
 }
 fn queued_logouts(fixture: &Fixture) -> Vec<Session> {
     serde_json::from_slice(&secret::load(&fixture.directory.join("logout.dpapi")).unwrap()).unwrap()

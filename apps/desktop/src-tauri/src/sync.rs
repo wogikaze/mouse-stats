@@ -15,6 +15,7 @@ pub struct Session {
     #[serde(default)]
     pub refresh_nonce: Option<String>,
 }
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Pending {
     pub state: String,
     pub verifier: String,
@@ -31,6 +32,13 @@ pub fn restore_session(
     Ok(secret::load(path)
         .ok()
         .and_then(|bytes| serde_json::from_slice(&bytes).ok()))
+}
+pub fn restore_pending(path: &std::path::Path) -> Option<Pending> {
+    let pending: Pending = secret::load(path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())?;
+    let age = now().saturating_sub(pending.created);
+    (age <= 300 && age >= 0).then_some(pending)
 }
 pub fn random() -> String {
     URL_SAFE_NO_PAD.encode(rand::random::<[u8; 32]>())
@@ -130,10 +138,19 @@ pub fn begin(runtime: &Runtime) -> Result<(), String> {
         created: now(),
         cloud_url: base.clone(),
     };
+    secret::save(
+        &runtime.pending_path,
+        &serde_json::to_vec(&p).map_err(|e| e.to_string())?,
+    )?;
     let challenge = URL_SAFE_NO_PAD.encode(Sha256::digest(p.verifier.as_bytes()));
     let url = format!("{base}/?state={}&pkce={challenge}&mode=device", p.state);
     *runtime.pending.lock().map_err(|_| "Auth lock")? = Some(p);
-    open_url(&url)
+    if let Err(error) = open_url(&url) {
+        *runtime.pending.lock().map_err(|_| "Auth lock")? = None;
+        let _ = std::fs::remove_file(&runtime.pending_path);
+        return Err(error);
+    }
+    Ok(())
 }
 pub fn callback(runtime: Arc<Runtime>, url: String) {
     std::thread::spawn(move || {
@@ -160,6 +177,9 @@ fn exchange(runtime: &Runtime, raw: &str) -> Result<(), String> {
     }
     let q: std::collections::HashMap<_, _> = u.query_pairs().into_owned().collect();
     let mut pending = runtime.pending.lock().map_err(|_| "Auth lock")?;
+    if pending.is_none() {
+        *pending = restore_pending(&runtime.pending_path);
+    }
     let p = pending.as_ref().ok_or("ログイン要求がありません")?;
     if q.get("state") != Some(&p.state) || now() - p.created > 300 {
         return Err("ログイン要求が期限切れか一致しません".into());
@@ -211,6 +231,7 @@ fn exchange(runtime: &Runtime, raw: &str) -> Result<(), String> {
         &runtime.secret_path,
         &serde_json::to_vec(&session).map_err(|e| e.to_string())?,
     )?;
+    let _ = std::fs::remove_file(&runtime.pending_path);
     *runtime.session.lock().map_err(|_| "Session lock")? = Some(session);
     runtime
         .sync_requested

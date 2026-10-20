@@ -296,7 +296,7 @@ onBeforeUnmount(() => {
             ? "バックグラウンド計測中"
             : "計測停止中"
         }}<small>集計データはこのPCに保存されます</small
-        ><span class="version">Mouse Stats / v0.1.0</span>
+        ><span class="version">Mouse Stats / v0.1.1</span>
       </div>
     </aside>
     <main>

@@ -41,6 +41,7 @@ pub struct Runtime {
     session: Mutex<Option<sync::Session>>,
     pending: Mutex<Option<sync::Pending>>,
     secret_path: PathBuf,
+    pending_path: PathBuf,
     identity_path: PathBuf,
     writer_guard: Mutex<()>,
     #[cfg(test)]
@@ -69,6 +70,7 @@ impl Runtime {
             .disconnect(new_device)?;
         *self.session.lock().map_err(|_| "Session lock")? = None;
         *self.pending.lock().map_err(|_| "Auth lock")? = None;
+        let _ = std::fs::remove_file(&self.pending_path);
         let mut health = self.health.lock().map_err(|_| "Health lock")?;
         health.generation_conflict = false;
         health.sync_error = None;
@@ -374,6 +376,8 @@ pub fn run() {
             let device = db.device_id()?;
             let identity_path=path.join(format!("identity-{device}.dpapi"));
             let secret_path = path.join("session.dpapi");
+            let pending_path = path.join("pending-login.dpapi");
+            let pending = sync::restore_pending(&pending_path);
             let cleanup_pending=db.cleanup_mode()?.is_some();
             let session=sync::restore_session(&db,&secret_path)?;
             let mut health=Health::default();if secret_path.exists()&&session.is_none()&&!cleanup_pending{health.error=Some("保存したログイン情報を復号できません。再ログインするか、新しいPCとして再登録してください".into());}
@@ -390,8 +394,9 @@ pub fn run() {
                 device,
                 health: Mutex::new(health),
                 session: Mutex::new(session),
-                pending: Mutex::new(None),
+                pending: Mutex::new(pending),
                 secret_path,
+                pending_path,
                 identity_path,
                 writer_guard:Mutex::new(()),
                 #[cfg(test)] after_drain:Mutex::new(None),

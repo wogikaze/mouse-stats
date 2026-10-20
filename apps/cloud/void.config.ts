@@ -15,7 +15,7 @@ export default defineConfig({
   },
   cloudflare: {
     name: "mouse-stats",
-    account_id: process.env.CLOUDFLARE_ACCOUNT_ID || undefined,
+    account_id: process.env.CLOUDFLARE_ACCOUNT_ID ?? "05e7a2aa0fa3b9aff9b9217e9b6ff743",
     routes: [],
     workers_dev: true,
     preview_urls: true,
