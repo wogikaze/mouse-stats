@@ -16,6 +16,7 @@
     "test:native": "node scripts/native-smoke.mjs",
     "test:soak": "node scripts/native-soak.mjs",
     "build": "npm run build -w @mouse-stats/desktop && npm run build -w @mouse-stats/cloud",
+    "deploy": "npm run deploy -w @mouse-stats/cloud",
     "desktop": "npm run tauri -w @mouse-stats/desktop --",
     "format": "vp fmt"
   },

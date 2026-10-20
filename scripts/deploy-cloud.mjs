@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-const raw = process.env.MOUSE_STATS_ORIGIN;
-if (!raw) throw Error("Set MOUSE_STATS_ORIGIN to the fixed HTTPS origin before deployment.");
+const raw = process.env.MOUSE_STATS_ORIGIN ?? "https://mouse-stats.kouse2319.workers.dev";
 const origin = new URL(raw);
 if (
   origin.protocol !== "https:" ||
