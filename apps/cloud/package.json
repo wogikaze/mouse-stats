@@ -22,5 +22,8 @@
     "@cloudflare/workers-types": "^4.20251001.0",
     "@playwright/test": "^1.56.0",
     "void": "1.1.12"
+  },
+  "optionalDependencies": {
+    "@napi-rs/keyring-linux-x64-gnu": "2.1.2"
   }
 }
