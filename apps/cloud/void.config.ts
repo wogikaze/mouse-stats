@@ -1,5 +1,10 @@
 import { defineConfig } from "void/config";
-const origin = new URL(process.env.MOUSE_STATS_ORIGIN ?? "http://localhost:5173");
+// Cloudflare's Git-connected builds evaluate this config without the local
+// deploy wrapper. Default to the production origin so those builds cannot
+// publish localhost as the WebAuthn origin.
+const origin = new URL(
+  process.env.MOUSE_STATS_ORIGIN ?? "https://mouse-stats.kouse2319.workers.dev",
+);
 export default defineConfig({
   target: "cloudflare",
   inference: { appType: "void", bindings: { db: true } },
